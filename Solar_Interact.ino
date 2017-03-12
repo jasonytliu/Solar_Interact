@@ -8,7 +8,14 @@
 
 
 /******************Constants*************************/
+#define R_PIN 10
+#define G_PIN 9
+#define B_PIN 11
 
+#define MAX_POWER 20
+#define MAX_ANALOG 255
+
+#define pinIn A0
 
 /******************Functions*************************/
 
@@ -22,6 +29,14 @@ float pollPower(int pinIn){
   return Power;
 }
 
+void ledBrightness(float power) {
+  power /= MAX_POWER;
+  int brightness = MAX_ANALOG*power;
+  analogWrite(R_PIN, brightness);
+  analogWrite(G_PIN, brightness);
+  analogWrite(B_PIN, brightness);
+}
+
 /******************Helpers**************************/
 
 /** Performs any pinMode() definitions normally done in setup()
@@ -29,7 +44,9 @@ float pollPower(int pinIn){
 * @return null
 */
 void initializePins(){
-  pinMode(LED_PIN, OUTPUT);
+  pinMode(R_PIN, OUTPUT);
+  pinMode(G_PIN, OUTPUT);
+  pinMode(B_PIN, OUTPUT);
 }
 
 /** Performs any initializations normally done in setup()
@@ -47,6 +64,6 @@ void setup(){
 }
 
 void loop(){
-
+  ledBrightness();
 }
 
