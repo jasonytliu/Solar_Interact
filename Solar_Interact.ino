@@ -21,8 +21,11 @@
 
 #define pinIn A0
 
-#define BTrefreshTime 100 // (ms)
+#define BTrefreshTime 1000 // (ms)
 
+/******************Global Variables*******************/
+
+int power = 0;
 
 SoftwareSerial BTserial(10, 11); // RX | TX
 
@@ -54,23 +57,33 @@ void ledBrightness(float power) {
   }
   int brightness = MAX_ANALOG*power;
   if (level > 0) //sets number of levels - 1 at maximum brightness
-    for (i = 0; i < level; i++)
+    for (int i = 0; i < level; i++)
       analogWrite(a+i, MAX_ANALOG);
   analogWrite(a+level, brightness); //last level will be at proportional brightness
+
 }
 
-void readPhone(){
-  int power = 0;
+/** Reads simulated solar data from tablet 
+ * @param null
+ * @return null
+ */
+void readFromTablet(){ //TODO: Arduino drops readings after first few successful readings. 
 //  power = BTserial.read();
-  power = BTserial.parseInt();
-
+    power = BTserial.parseInt();
+    Serial.println(power);
+  
   if(power > 0){
     Serial.print("Read from phone... Power: ");
     Serial.println(power);
   }
 }
 
-static unsigned long timeKeeper = 0;
+/** Prints power measurements to the tablet
+ *  @param null
+ *  @return null
+ */
+void printToTablet(){
+  static unsigned long timeKeeper = 0;
 
   if((unsigned long)(millis() - timeKeeper > BTrefreshTime)){ 
       
@@ -120,14 +133,28 @@ void performStartupSequence(){
 
 }
 
+/** Checks that a portion of code is not stuck in loop
+ *  @param null
+ *  @return null
+ */
+void checkInfiniteLoop(){
+  int checkWorking=1000;
+  static unsigned long lastCheck = 0;
+
+   if((unsigned long)(millis() - lastCheck > checkWorking)){
+    Serial.println("Not stuck in loop.. "); 
+   }
+}
+
 /***************Main setup and loop******************/
 void setup(){
   initializePins();
-  performStartUpSequence();
+  performStartupSequence();
 }
 
 void loop(){
-  ledBrightness();
-  readPhone();
-  printBT();
+  ledBrightness(power);
+  readFromTablet();
+  printToTablet();
+  checkInfiniteLoop();
 }
