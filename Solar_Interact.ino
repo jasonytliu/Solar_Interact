@@ -5,7 +5,9 @@
  */
 
 /******************Libraries*************************/
-
+#include <SoftwareSerial.h>
+#include <Time.h>
+#include <TimeLib.h>
 
 /******************Constants*************************/
 #define LVL_1 2
@@ -18,6 +20,12 @@
 #define MAX_ANALOG 255
 
 #define pinIn A0
+
+#define BTrefreshTime 100 // (ms)
+
+
+SoftwareSerial BTserial(10, 11); // RX | TX
+
 
 /******************Functions*************************/
 
@@ -51,6 +59,42 @@ void ledBrightness(float power) {
   analogWrite(a+level, brightness); //last level will be at proportional brightness
 }
 
+void readPhone(){
+  int power = 0;
+//  power = BTserial.read();
+  power = BTserial.parseInt();
+
+  if(power > 0){
+    Serial.print("Read from phone... Power: ");
+    Serial.println(power);
+  }
+}
+
+static unsigned long timeKeeper = 0;
+
+  if((unsigned long)(millis() - timeKeeper > BTrefreshTime)){ 
+      
+//    BTserial.print("Solar Interact");
+//    
+//    BTserial.print(",");
+//    
+//    BTserial.print("Sending Power");
+//    
+//    BTserial.print(",");
+    
+    BTserial.print("Time taken to send: ");
+    
+    BTserial.print(",");
+    
+    BTserial.print(millis()-timeKeeper);
+    
+    BTserial.print(";");
+  
+    timeKeeper = millis();
+  }
+}
+
+
 /******************Helpers**************************/
 
 /** Performs any pinMode() definitions normally done in setup()
@@ -70,7 +114,10 @@ void initializePins(){
 * @return null
 */
 void performStartupSequence(){
-  ;
+  BTserial.begin(9600); 
+  Serial.begin(9600);
+  Serial.println("Initialized");
+
 }
 
 /***************Main setup and loop******************/
@@ -81,5 +128,6 @@ void setup(){
 
 void loop(){
   ledBrightness();
+  readPhone();
+  printBT();
 }
-
