@@ -8,9 +8,11 @@
 
 
 /******************Constants*************************/
-#define R_PIN 10
-#define G_PIN 9
-#define B_PIN 11
+#define LVL_1 2
+#define LVL_2 3
+#define LVL_3 4
+#define LVL_4 5
+#define LVL_5 6
 
 #define MAX_POWER 20
 #define MAX_ANALOG 255
@@ -28,13 +30,25 @@ float pollPower(int pinIn){
   Power = 1000*(16.0*(Vflo*Vflo))/20000.0;
   return Power;
 }
+/******************Helpers**************************/
 
+/** Controls lighting of LEDs
+* @param power
+* @return
+*/
 void ledBrightness(float power) {
-  power /= MAX_POWER;
+  int a = LVL_1;
+  int level = 0; //how many extra levels will be lit
+  power /= (MAX_POWER/5); //scales power to a proportion of the maximum power needed to advance each level of Geisel
+  while (power > 1) { //controls how many levels will be lit up
+    level++;
+    power -= 1;
+  }
   int brightness = MAX_ANALOG*power;
-  analogWrite(R_PIN, brightness);
-  analogWrite(G_PIN, brightness);
-  analogWrite(B_PIN, brightness);
+  if (level > 0) //sets number of levels - 1 at maximum brightness
+    for (i = 0; i < level; i++)
+      analogWrite(a+i, MAX_ANALOG);
+  analogWrite(a+level, brightness); //last level will be at proportional brightness
 }
 
 /******************Helpers**************************/
@@ -44,9 +58,11 @@ void ledBrightness(float power) {
 * @return null
 */
 void initializePins(){
-  pinMode(R_PIN, OUTPUT);
-  pinMode(G_PIN, OUTPUT);
-  pinMode(B_PIN, OUTPUT);
+  pinMode(LVL_1, OUTPUT);
+  pinMode(LVL_2, OUTPUT);
+  pinMode(LVL_3, OUTPUT);
+  pinMode(LVL_4, OUTPUT);
+  pinMode(LVL_5, OUTPUT);
 }
 
 /** Performs any initializations normally done in setup()
