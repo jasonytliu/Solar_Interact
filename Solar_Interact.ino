@@ -27,7 +27,7 @@
 
 int power = 0;
 
-SoftwareSerial BTserial(22, 24); // RX | TX (On Arduino side -- opposite of BT side)
+SoftwareSerial BTserial(22, 24); // TX | RX (On BT module) 
 
 
 /******************Functions*************************/
@@ -110,43 +110,10 @@ void printToTablet(){
 }
 
 
-/******************Helpers**************************/
-
-/** Performs any pinMode() definitions normally done in setup()
-* @param null
-* @return null
-*/
-void initializePins(){
-  pinMode(LVL_1, OUTPUT);
-  pinMode(LVL_2, OUTPUT);
-  pinMode(LVL_3, OUTPUT);
-  pinMode(LVL_4, OUTPUT);
-  pinMode(LVL_5, OUTPUT);
-}
-
-/** Performs any initializations normally done in setup()
-* @param null
-* @return null
-*/
-void performStartupSequence(){
-  BTserial.begin(9600); 
-  Serial.begin(115200);
-  Serial.println("Initialized");
-}
-
-/** Checks that a portion of code is not stuck in loop
- *  @param null
- *  @return null
+/** Ensures that all LED's are working
+ * @param null
+ * @return null
  */
-void checkInfiniteLoop(){
-  int checkWorking=1000;
-  static unsigned long lastCheck = 0;
-
-   if((unsigned long)(millis() - lastCheck > checkWorking)){
-    Serial.println("Not stuck in loop.. "); 
-   }
-}
-
 void lightShow(){
   //LED's attached to pins 3-7, 9-13
   analogWrite(3, 5);
@@ -192,6 +159,44 @@ void lightShow(){
                     delay(100);
 }
 
+/******************Helpers**************************/
+
+/** Performs any pinMode() definitions normally done in setup()
+* @param null
+* @return null
+*/
+void initializePins(){
+  pinMode(LVL_1, OUTPUT);
+  pinMode(LVL_2, OUTPUT);
+  pinMode(LVL_3, OUTPUT);
+  pinMode(LVL_4, OUTPUT);
+  pinMode(LVL_5, OUTPUT);
+}
+
+/** Performs any initializations normally done in setup()
+* @param null
+* @return null
+*/
+void performStartupSequence(){
+  BTserial.begin(9600); 
+  Serial.begin(115200);
+  Serial.println("Initialized");
+}
+
+/** Checks that a portion of code is not stuck in loop
+ *  @param null
+ *  @return null
+ */
+void checkInfiniteLoop(){
+  int checkWorking=1000;
+  static unsigned long lastCheck = 0;
+
+   if((unsigned long)(millis() - lastCheck > checkWorking)){
+    Serial.println("Not stuck in loop.. "); 
+   }
+}
+
+
 /***************Main setup and loop******************/
 void setup(){
   initializePins();
@@ -202,6 +207,6 @@ void setup(){
 void loop(){
 //  ledBrightness(power);
   readFromTablet();
-//  printToTablet();
+  printToTablet();
 //  checkInfiniteLoop();
 }
