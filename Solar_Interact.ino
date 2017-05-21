@@ -21,13 +21,13 @@
 
 #define pinIn A0
 
-#define BTrefreshTime 1000 // (ms)
+#define BTrefreshTime 10 // (ms)
 
 /******************Global Variables*******************/
 
 int power = 0;
 
-SoftwareSerial BTserial(10, 11); // RX | TX
+SoftwareSerial BTserial(22, 24); // RX | TX (On Arduino side -- opposite of BT side)
 
 
 /******************Functions*************************/
@@ -67,15 +67,17 @@ void ledBrightness(float power) {
  * @param null
  * @return null
  */
-void readFromTablet(){ //TODO: Arduino drops readings after first few successful readings. 
-//  power = BTserial.read();
-    power = BTserial.parseInt();
-    Serial.println(power);
-  
-  if(power > 0){
-    Serial.print("Read from phone... Power: ");
-    Serial.println(power);
-  }
+void readFromTablet(){
+    static unsigned long timeKeeper = millis();
+//    power = BTserial.parseInt();
+    if((unsigned long)(millis() - timeKeeper > 1000) || BTserial.available() > 0){ 
+      power = BTserial.parseInt();
+      Serial.print("Read from phone... Power: ");
+      Serial.println(power);
+      timeKeeper = millis();
+    }
+
+
 }
 
 /** Prints power measurements to the tablet
@@ -95,11 +97,11 @@ void printToTablet(){
 //    
 //    BTserial.print(",");
     
-    BTserial.print("Time taken to send: ");
+    BTserial.print("Time elapsed: ");
     
     BTserial.print(",");
     
-    BTserial.print(millis()-timeKeeper);
+    BTserial.print(millis());
     
     BTserial.print(";");
   
@@ -128,9 +130,8 @@ void initializePins(){
 */
 void performStartupSequence(){
   BTserial.begin(9600); 
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("Initialized");
-
 }
 
 /** Checks that a portion of code is not stuck in loop
@@ -146,15 +147,61 @@ void checkInfiniteLoop(){
    }
 }
 
+void lightShow(){
+  //LED's attached to pins 3-7, 9-13
+  analogWrite(3, 5);
+  delay(100);
+    analogWrite(4,5);
+    delay(100);
+      analogWrite(5, 5);
+      delay(100);
+        analogWrite(6, 5);
+        delay(100);
+          analogWrite(7, 5);
+          delay(100);
+            analogWrite(9, 5);
+            delay(100);
+              analogWrite(10, 5);
+              delay(100);
+                analogWrite(11, 5);
+                delay(100);
+                  analogWrite(12, 5);
+                  delay(100);
+                    analogWrite(13, 5);
+                    delay(100);
+
+  analogWrite(3, 0);
+  delay(100);
+    analogWrite(4,0);
+    delay(100);
+      analogWrite(5, 0);
+      delay(100);
+        analogWrite(6, 0);
+        delay(100);
+          analogWrite(7, 0);
+          delay(100);
+            analogWrite(9, 0);
+            delay(100);
+              analogWrite(10, 0);
+              delay(100);
+                analogWrite(11, 0);
+                delay(100);
+                  analogWrite(12, 0);
+                  delay(100);
+                    analogWrite(13, 0);
+                    delay(100);
+}
+
 /***************Main setup and loop******************/
 void setup(){
   initializePins();
   performStartupSequence();
+  lightShow();
 }
 
 void loop(){
-  ledBrightness(power);
+//  ledBrightness(power);
   readFromTablet();
-  printToTablet();
-  checkInfiniteLoop();
+//  printToTablet();
+//  checkInfiniteLoop();
 }
