@@ -60,7 +60,7 @@ int ledBrightness(float power, int side) {
   if (power > MAX_POWER) {
     for (int i = 0; i < 5; i++)
       analogWrite(a+i, MAX_ANALOG);
-    return 6;
+    return 6; //all levels completely lit
   }
   power /= (MAX_POWER/5); //scales power to a proportion of the maximum power needed to advance each level of Geisel
   while (power > 1) { //controls how many levels will be lit up
