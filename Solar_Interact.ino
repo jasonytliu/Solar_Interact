@@ -10,14 +10,19 @@
 #include <TimeLib.h>
 
 /******************Constants*************************/
-#define LVL_1 2
-#define LVL_2 3
-#define LVL_3 4
-#define LVL_4 5
-#define LVL_5 6
+#define LVL_1a 2
+#define LVL_2a 3
+#define LVL_3a 4
+#define LVL_4a 5
+#define LVL_5a 6
+#define LVL_1b 8
+#define LVL_2b 9
+#define LVL_3b 10
+#define LVL_4b 11
+#define LVL_5b 12
 
 #define MAX_POWER 20
-#define MAX_ANALOG 255
+#define MAX_ANALOG 100
 
 #define pinIn A0
 
@@ -47,9 +52,16 @@ float pollPower(int pinIn){
 * @param power
 * @return
 */
-void ledBrightness(float power) {
-  int a = LVL_1;
+int ledBrightness(float power, int side) {
+  if (side == 1) // controls whether the user-controlled or solar-controlled side is lit
+    int a = LVL_1a;
+  else int a = LVL_1b;
   int level = 0; //how many extra levels will be lit
+  if (power > MAX_POWER) {
+    for (int i = 0; i < 5; i++)
+      analogWrite(a+i, MAX_ANALOG);
+    return 6;
+  }
   power /= (MAX_POWER/5); //scales power to a proportion of the maximum power needed to advance each level of Geisel
   while (power > 1) { //controls how many levels will be lit up
     level++;
@@ -60,7 +72,7 @@ void ledBrightness(float power) {
     for (int i = 0; i < level; i++)
       analogWrite(a+i, MAX_ANALOG);
   analogWrite(a+level, brightness); //last level will be at proportional brightness
-
+  return level;
 }
 
 /** Reads simulated solar data from tablet 
@@ -205,7 +217,7 @@ void setup(){
 }
 
 void loop(){
-//  ledBrightness(power);
+//  ledBrightness(power, side);
   readFromTablet();
   printToTablet();
 //  checkInfiniteLoop();
