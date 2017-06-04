@@ -19,6 +19,9 @@
 #define MAX_POWER 20
 #define MAX_ANALOG 255
 
+#define V_RES 1024.0 //resolution of analogRead function
+#define V_MAX_READ 5.0 //max voltage Arduino can read with analogRead
+
 #define pinIn A0
 
 #define BTrefreshTime 10 // (ms)
@@ -36,11 +39,14 @@ float pollPower(int pinIn){
   int Vint;
   float Power;
   float Vflo;
-  Vint = analogRead(pinIn);
-  Vflo = 5.0*(Vint/1024.0);
-  Power = 1000*(16.0*(Vflo*Vflo))/20000.0;
+  float powerScale = 1000.0; // scalar to make power unit more readable for the user (1000 corresponds to an output in mW)
+  float Rload = 20000.0; // load resistance being driven by the generator
+  Vint = analogRead(pinIn); //returns integer between 0 (0V) and 1024 (5V) corresponding to voltage at pinIn
+  Vflo = V_MAX_READ*(Vint/V_RES); //converts Vint into a float equal to the actual voltage at the node
+  Power = powerScale*(16.0*(Vflo*Vflo))/Rload; //calculates power using P = V^2/R.  Some scaling needed in case of resistive divider to prevent overloading of the analog read function (that's why the 16.0 is there, will likely change later) 
   return Power;
 }
+
 /******************Helpers**************************/
 
 /** Controls lighting of LEDs
