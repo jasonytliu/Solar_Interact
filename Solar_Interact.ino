@@ -1,7 +1,7 @@
-/** Solar Interact - UC San Diego ESW 
- * @authors: Jason Liu, Kelly Levick, Jon Bradshaw, Mukund Nair
+/** Solar Interact - UC San Diego ESW
+ * @authors: Jason Liu, Kelly Levick, Jon Bradshaw, Mukund Nair, JJ Kadifa
  * @version 1.0
- * 
+ *
  */
 
 /******************Libraries*************************/
@@ -29,16 +29,17 @@
 
 #define pinIn A0
 
-#define BTrefreshTime 10 // (ms)
+#define BTrefreshTime 2000 // (ms)
 
+#define TX 10 //On BT Module //Warning: Some pins can't be used for TX/RX.
+#define RX 11 //On BT Module // See SoftSerial lib for details.
 /******************Global Variables*******************/
 
-int power = 0;
+String command = ""; // For BT
+SoftwareSerial BTserial(TX, RX); // TX | RX (On BT module)
 
-SoftwareSerial BTserial(22, 24); // TX | RX (On BT module) 
 
-
-/******************Functions*************************/
+/******************Power*************************/
 
 float pollPower(int pinIn){
   int Vint;
@@ -48,87 +49,77 @@ float pollPower(int pinIn){
   float Rload = 20000.0; // load resistance being driven by the generator
   Vint = analogRead(pinIn); //returns integer between 0 (0V) and 1024 (5V) corresponding to voltage at pinIn
   Vflo = V_MAX_READ*(Vint/V_RES); //converts Vint into a float equal to the actual voltage at the node
-  Power = powerScale*(16.0*(Vflo*Vflo))/Rload; //calculates power using P = V^2/R.  Some scaling needed in case of resistive divider to prevent overloading of the analog read function (that's why the 16.0 is there, will likely change later) 
+  Power = powerScale*(16.0*(Vflo*Vflo))/Rload; //calculates power using P = V^2/R.  Some scaling needed in case of resistive divider to prevent overloading of the analog read function (that's why the 16.0 is there, will likely change later)
   return Power;
 }
 
-/******************Helpers**************************/
+/******************LED Control**************************/
 
-/** Controls lighting of LEDs
-* @param power
-* @return
-*/
-int ledBrightness(float power, int side) {
-  if (side == 1) // controls whether the user-controlled or solar-controlled side is lit
-    int a = LVL_1a;
-  else int a = LVL_1b;
-  int level = 0; //how many extra levels will be lit
-  if (power > MAX_POWER) {
-    for (int i = 0; i < 5; i++)
-      analogWrite(a+i, MAX_ANALOG);
-    return 6;
-  }
-  power /= (MAX_POWER/5); //scales power to a proportion of the maximum power needed to advance each level of Geisel
-  while (power > 1) { //controls how many levels will be lit up
-    level++;
-    power -= 1;
-  }
-  int brightness = MAX_ANALOG*power;
-  if (level > 0) //sets number of levels - 1 at maximum brightness
-    for (int i = 0; i < level; i++)
-      analogWrite(a+i, MAX_ANALOG);
-  analogWrite(a+level, brightness); //last level will be at proportional brightness
-  return level;
-}
+// /** Controls lighting of LEDs
+// * @param power
+// * @return
+// */
+// int ledBrightness(float power, int side) {
+//   if (side == 1) // controls whether the user-controlled or solar-controlled side is lit
+//     int a = LVL_1a;
+//   else int a = LVL_1b;
+//   int level = 0; //how many extra levels will be lit
+//   if (power > MAX_POWER) {
+//     for (int i = 0; i < 5; i++)
+//       analogWrite(a+i, MAX_ANALOG);
+//     return 6;
+//   }
+//   power /= (MAX_POWER/5); //scales power to a proportion of the maximum power needed to advance each level of Geisel
+//   while (power > 1) { //controls how many levels will be lit up
+//     level++;
+//     power -= 1;
+//   }
+//   int brightness = MAX_ANALOG*power;
+//   if (level > 0) //sets number of levels - 1 at maximum brightness
+//     for (int i = 0; i < level; i++)
+//       analogWrite(a+i, MAX_ANALOG);
+//   analogWrite(a+level, brightness); //last level will be at proportional brightness
+//   return level;
+// }
 
-/** Reads simulated solar data from tablet 
+/******************Bluetooth*******************/
+
+
+/** Reads simulated solar data from tablet
  * @param null
  * @return null
  */
-void readFromTablet(){
-    static unsigned long timeKeeper = millis();
-//    power = BTserial.parseInt();
-    if((unsigned long)(millis() - timeKeeper > 1000) || BTserial.available() > 0){ 
-      power = BTserial.parseInt();
-      Serial.print("Read from phone... Power: ");
-      Serial.println(power);
-      timeKeeper = millis();
+void receiveData(){
+  if (BTserial.available()) {
+    Serial.println("---");
+    Serial.println("Fn open..");
+    while(BTserial.available()) { // While there is more to be read, keep reading.
+      command += (char)BTserial.read();
     }
-
-
+    Serial.println(command);
+    command = ""; // No repeats
+    Serial.println("Fn closed.");
+    Serial.println("---");
+  }
 }
 
 /** Prints power measurements to the tablet
  *  @param null
  *  @return null
  */
-void printToTablet(){
+void sendData(){
   static unsigned long timeKeeper = 0;
 
-  if((unsigned long)(millis() - timeKeeper > BTrefreshTime)){ 
-      
-//    BTserial.print("Solar Interact");
-//    
-//    BTserial.print(",");
-//    
-//    BTserial.print("Sending Power");
-//    
-//    BTserial.print(",");
-    
+  if((unsigned long)(millis() - timeKeeper > BTrefreshTime)){
     BTserial.print("Time elapsed: ");
-    
     BTserial.print(",");
-    
     BTserial.print(millis());
-    
     BTserial.print(";");
-  
     timeKeeper = millis();
   }
 }
 
-
-/** Ensures that all LED's are working
+/** Runs @ startup to check connections
  * @param null
  * @return null
  */
@@ -177,54 +168,29 @@ void lightShow(){
                     delay(100);
 }
 
-/******************Helpers**************************/
+/***************Main setup and loop******************/
 
-/** Performs any pinMode() definitions normally done in setup()
-* @param null
-* @return null
-*/
-void initializePins(){
-  pinMode(LVL_1, OUTPUT);
-  pinMode(LVL_2, OUTPUT);
-  pinMode(LVL_3, OUTPUT);
-  pinMode(LVL_4, OUTPUT);
-  pinMode(LVL_5, OUTPUT);
-}
-
-/** Performs any initializations normally done in setup()
+/** Performs any initializations normally done in setup(). Include pinMode() here
 * @param null
 * @return null
 */
 void performStartupSequence(){
-  BTserial.begin(9600); 
   Serial.begin(115200);
-  Serial.println("Initialized");
+  Serial.println("System running.");
+
+  BTserial.begin(9600);
+  pinMode(TX, INPUT_PULLUP); // only needed for JY-MCUY v1.06?
+  BTserial.listen();
 }
 
-/** Checks that a portion of code is not stuck in loop
- *  @param null
- *  @return null
- */
-void checkInfiniteLoop(){
-  int checkWorking=1000;
-  static unsigned long lastCheck = 0;
-
-   if((unsigned long)(millis() - lastCheck > checkWorking)){
-    Serial.println("Not stuck in loop.. "); 
-   }
-}
-
-
-/***************Main setup and loop******************/
 void setup(){
-  initializePins();
   performStartupSequence();
-  lightShow();
+  // lightShow();
 }
 
 void loop(){
 //  ledBrightness(power, side);
-  readFromTablet();
-  printToTablet();
-//  checkInfiniteLoop();
+  receiveData();
+  sendData();
+
 }
