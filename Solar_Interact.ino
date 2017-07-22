@@ -10,16 +10,18 @@
 #include <TimeLib.h>
 
 /******************Constants*************************/
-#define LVL_1a 2
-#define LVL_2a 3
-#define LVL_3a 4
-#define LVL_4a 5
-#define LVL_5a 6
-#define LVL_1b 8
-#define LVL_2b 9
-#define LVL_3b 10
-#define LVL_4b 11
-#define LVL_5b 12
+#define LVL_1a 3
+#define LVL_2a 4
+#define LVL_3a 5
+#define LVL_4a 6
+#define LVL_5a 7
+#define LVL_6a 8
+#define LVL_1b 9
+#define LVL_2b 10
+#define LVL_3b 11
+#define LVL_4b 12
+#define LVL_5b 13
+#define LVL_6b 14
 
 #define MAX_POWER 20
 #define MAX_ANALOG 100
@@ -50,37 +52,66 @@ float pollPower(int pinIn){
   Vint = analogRead(pinIn); //returns integer between 0 (0V) and 1024 (5V) corresponding to voltage at pinIn
   Vflo = V_MAX_READ*(Vint/V_RES); //converts Vint into a float equal to the actual voltage at the node
   Power = powerScale*(16.0*(Vflo*Vflo))/Rload; //calculates power using P = V^2/R.  Some scaling needed in case of resistive divider to prevent overloading of the analog read function (that's why the 16.0 is there, will likely change later)
+  Serial.println(Power);
+  delay(1000);
   return Power;
 }
 
 /******************LED Control**************************/
 
-// /** Controls lighting of LEDs
-// * @param power
-// * @return
-// */
-// int ledBrightness(float power, int side) {
-//   if (side == 1) // controls whether the user-controlled or solar-controlled side is lit
-//     int a = LVL_1a;
-//   else int a = LVL_1b;
-//   int level = 0; //how many extra levels will be lit
-//   if (power > MAX_POWER) {
-//     for (int i = 0; i < 5; i++)
-//       analogWrite(a+i, MAX_ANALOG);
-//     return 6;
-//   }
-//   power /= (MAX_POWER/5); //scales power to a proportion of the maximum power needed to advance each level of Geisel
-//   while (power > 1) { //controls how many levels will be lit up
-//     level++;
-//     power -= 1;
-//   }
-//   int brightness = MAX_ANALOG*power;
-//   if (level > 0) //sets number of levels - 1 at maximum brightness
-//     for (int i = 0; i < level; i++)
-//       analogWrite(a+i, MAX_ANALOG);
-//   analogWrite(a+level, brightness); //last level will be at proportional brightness
-//   return level;
-// }
+bool reachTop(int pinIn) {
+  int a = analogRead(pinIn);
+  if (a == 1023) { //we will need to monitor this for errors and adjust
+    return true;
+  }
+  else return false;
+}
+
+int endGameWin() {
+  if (reachTop(LVL_5a) == true) {
+    return 1;
+  }
+//  if (reachTop(LVL_5b) == true) {
+//    return 2;
+//  }
+  else return 0;
+}
+
+ /** Controls lighting of LEDs
+ * @param power
+ * @return
+ */
+ void ledBrightness(float power, int side) {
+   int a = 0;
+   if (side == 1) // controls whether the user-controlled or solar-controlled side is lit
+     a = LVL_1a;
+//   else a = LVL_1b;
+   int level = 0; //how many extra levels will be lit
+   if (power > MAX_POWER) {
+     for (int i = 0; i < 5; i++)
+       analogWrite(a+i, MAX_ANALOG);
+     return 6;
+   }
+   power /= (MAX_POWER/5); //scales power to a proportion of the maximum power needed to advance each level of Geisel
+   while (power > 1) { //controls how many levels will be lit up
+     level++;
+     power -= 1;
+   }
+   int brightness = MAX_ANALOG*power;
+   if (level > 0) //sets number of levels - 1 at maximum brightness
+     for (int i = 0; i < level; i++)
+       analogWrite(a+i, MAX_ANALOG);
+   analogWrite(a+level, brightness); //last level will be at proportional brightness 
+ }
+
+ int competitivePlay() {
+   static float powerUser = 0;
+   powerUser += pollPower(userPinIn);
+//   static float powerSolar += pollPower(solarPinIn);
+   ledBrightness(powerUser, 1);
+//   ledBrightness(powerSolar, 2);
+   return endGameWin();
+ }
 
 /******************Bluetooth*******************/
 
