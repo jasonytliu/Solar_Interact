@@ -19,8 +19,8 @@
 #define LVL_5a 26
 #define LVL_1b 27
 #define LVL_2b 28
-#define LVL_3b 29 //TODO: COPY.
-#define LVL_4b 30 //TODO: COPY.
+#define LVL_3b 29 
+#define LVL_4b 30 
 #define LVL_5b 31
 
 #define MAX_POWER 15 //Originally 20
@@ -36,7 +36,8 @@
 #define TX 10 //On BT Module //Warning: Some pins can't be used for TX/RX.
 #define RX 11 //On BT Module // See SoftSerial lib for details.
 
-//TODO: Copy below
+
+//Below are codes for the bluetooth communication
 //TODO: Ensure power measurements do not conflict with below
 #define IDLE 99
 #define MODE_1 1
@@ -58,7 +59,6 @@ const char *SIMDATA = "SIMDATA";
 String incomingData = ""; // For BT
 SoftwareSerial BTserial(TX, RX); // TX | RX (On BT module)
 
-//TODO: Copy below
 int simData[DATA_POINTS] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1}; //-1 Represents empty
 int STATUS = 99; //Start Arduino on idle
 boolean GAME_START = false; //Controls when SimData lighting begins
@@ -168,7 +168,7 @@ void lightItUp(char *side){
 //  }
 
 
-/******************Bluetooth*******************/ //TODO:COPY THIS SECTION
+/******************Bluetooth*******************/
 
 /** Store the next set of data into array (simData)
   *   via while() (won't break until array completed)
