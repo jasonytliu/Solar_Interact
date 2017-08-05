@@ -117,7 +117,7 @@ int endGameWin() {
        level++;
        power -= 1;
      }
-     int brightness = MAX_ANALOG*power;
+     int brightness = 70+(200-70)*power; // 200 is basically completely on and 70 is low power, 200-70 is the range of brightness, we will change the numbers into variables
      if (level > 0) //sets number of levels - 1 at maximum brightness
        for (int i = 0; i < level; i++)
          analogWrite(a+i, MAX_ANALOG);
