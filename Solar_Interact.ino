@@ -104,14 +104,14 @@ int endGameWin() {
  * @return
  */
  void ledBrightness(float power, int side) { //TODO: Works in increasing power, but not in decreasing
-     int a = LVL_1SIM;
+     int groundfloor = LVL_1SIM;
      if (side == 1) // controls whether the user-controlled or solar-controlled side is lit
-       a = LVL_1PLAY;
-  //   else a = LVL_1SIM;
+       groundfloor = LVL_1PLAY;
+  //   else groundfloor = LVL_1SIM;
      int level = 0; //how many extra levels will be lit
      if (power > MAX_POWER) {
        for (int i = 0; i < 5; i++)
-         analogWrite(a+i, MAX_ANALOG);
+         analogWrite(groundfloor+i, MAX_ANALOG);
        return; //TODO: Why 6?
      }
      power /= (MAX_POWER/5); //scales power to a proportion of the maximum power needed to advance each level of Geisel
@@ -122,13 +122,13 @@ int endGameWin() {
      int brightness = MAX_ANALOG*power; // 200 is basically completely on and 70 is low power, 200-70 is the range of brightness, we will change the numbers into variables
      if (level > 0) //sets number of levels - 1 at maximum brightness
        for (int i = 0; i < level; i++) {
-         analogWrite(a+i, MAX_ANALOG);
+         analogWrite(groundfloor+i, MAX_ANALOG);
          Serial.println("Hi");
        }
-       for (int j = level+a; j < (a+6); j++) {
+       for (int j = level+groundfloor; j < (groundfloor+6); j++) {
         analogWrite(j, 0);
        }
-     analogWrite(a+level, brightness); //last level will be at proportional brightness
+     analogWrite(groundfloor+level, brightness); //last level will be at proportional brightness
  }
 
 void lightItUp(char *side){
