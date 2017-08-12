@@ -112,7 +112,7 @@ int endGameWin() {
      if (power > MAX_POWER) {
        for (int i = 0; i < 5; i++)
          analogWrite(a+i, MAX_ANALOG);
-       return 6; //TODO: Why 6?
+       return; //TODO: Why 6?
      }
      power /= (MAX_POWER/5); //scales power to a proportion of the maximum power needed to advance each level of Geisel
      while (power > 1) { //controls how many levels will be lit up
@@ -121,12 +121,10 @@ int endGameWin() {
      }
      int brightness = MAX_ANALOG*power; // 200 is basically completely on and 70 is low power, 200-70 is the range of brightness, we will change the numbers into variables
      if (level > 0) //sets number of levels - 1 at maximum brightness
-     int i = 0;
        for (int i = 0; i < level; i++) {
          analogWrite(a+i, MAX_ANALOG);
          Serial.println("Hi");
        }
-      int j = 0;
        for (int j = level+a; j < (a+6); j++) {
         analogWrite(j, 0);
        }
