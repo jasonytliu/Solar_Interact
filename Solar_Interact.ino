@@ -8,20 +8,22 @@
 /******************Libraries*************************/
 #include <Arduino.h>
 #include <SoftwareSerial.h>
-#include <Time.h>
-#include <TimeLib.h>
+//#include <Time.h>
+//#include <TimeLib.h>
 
 /******************Constants*************************/
-#define LVL_1a 22
-#define LVL_2a 23
-#define LVL_3a 24
-#define LVL_4a 25
-#define LVL_5a 26
-#define LVL_1b 27
-#define LVL_2b 28
-#define LVL_3b 29 
-#define LVL_4b 30 
-#define LVL_5b 31
+#define LVL_1PLAY 2
+#define LVL_2PLAY 3
+#define LVL_3PLAY 4
+#define LVL_4PLAY 5
+#define LVL_5PLAY 6
+#define LVL_6PLAY 7
+
+#define LVL_1SIM 27
+#define LVL_2SIM 28
+#define LVL_3SIM 29 
+#define LVL_4SIM 30 
+#define LVL_5SIM 31
 
 #define MAX_POWER 15 //Originally 20
 #define MAX_ANALOG 500
@@ -88,10 +90,10 @@ bool reachTop(int pinIn) {
 }
 
 int endGameWin() {
-  if (reachTop(LVL_5a) == true) {
+  if (reachTop(LVL_5PLAY) == true) {
     return 1;
   }
-//  if (reachTop(LVL_5b) == true) {
+//  if (reachTop(LVL_5SIM) == true) {
 //    return 2;
 //  }
   else return 0;
@@ -102,10 +104,10 @@ int endGameWin() {
  * @return
  */
  void ledBrightness(float power, int side) { //TODO: Works in increasing power, but not in decreasing
-     int a = LVL_1b;
+     int a = LVL_1SIM;
      if (side == 1) // controls whether the user-controlled or solar-controlled side is lit
-       a = LVL_1a;
-  //   else a = LVL_1b;
+       a = LVL_1PLAY;
+  //   else a = LVL_1SIM;
      int level = 0; //how many extra levels will be lit
      if (power > MAX_POWER) {
        for (int i = 0; i < 5; i++)
@@ -286,46 +288,46 @@ void receiveData(){
  */
 void lightShow(){
 
-  analogWrite(LVL_1a, 150);
+  analogWrite(LVL_1PLAY, 150);
   delay(100);
-    analogWrite(LVL_2a, 150);
+    analogWrite(LVL_2PLAY, 150);
     delay(100);
-      analogWrite(LVL_3a, 150);
+      analogWrite(LVL_3PLAY, 150);
       delay(100);
-        analogWrite(LVL_4a, 150);
+        analogWrite(LVL_4PLAY, 150);
         delay(100);
-          analogWrite(LVL_5a, 150);
+          analogWrite(LVL_5PLAY, 150);
           delay(100);
-            analogWrite(LVL_1b, 150);
+            analogWrite(LVL_1SIM, 150);
             delay(100);
-              analogWrite(LVL_2b, 150);
+              analogWrite(LVL_2SIM, 150);
               delay(100);
-                analogWrite(LVL_3b, 150);
+                analogWrite(LVL_3SIM, 150);
                 delay(100);
-                  analogWrite(LVL_4b, 150);
+                  analogWrite(LVL_4SIM, 150);
                   delay(100);
-                    analogWrite(LVL_5b, 150);
+                    analogWrite(LVL_5SIM, 150);
                     delay(100);
 
-  analogWrite(LVL_1a, 0);
+  analogWrite(LVL_1PLAY, 0);
   delay(100);
-    analogWrite(LVL_2a,0);
+    analogWrite(LVL_2PLAY,0);
     delay(100);
-      analogWrite(LVL_3a, 0);
+      analogWrite(LVL_3PLAY, 0);
       delay(100);
-        analogWrite(LVL_4a, 0);
+        analogWrite(LVL_4PLAY, 0);
         delay(100);
-          analogWrite(LVL_5a, 0);
+          analogWrite(LVL_5PLAY, 0);
           delay(100);
-            analogWrite(LVL_1b, 0);
+            analogWrite(LVL_1SIM, 0);
             delay(100);
-              analogWrite(LVL_2b, 0);
+              analogWrite(LVL_2SIM, 0);
               delay(100);
-                analogWrite(LVL_3b, 0);
+                analogWrite(LVL_3SIM, 0);
                 delay(100);
-                  analogWrite(LVL_4b, 0);
+                  analogWrite(LVL_4SIM, 0);
                   delay(100);
-                    analogWrite(LVL_5b, 0);
+                    analogWrite(LVL_5SIM, 0);
                     delay(100);
   Serial.println("lightShow()");
 }
