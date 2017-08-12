@@ -362,7 +362,7 @@ void setup(){
 void loop(){
   receiveData();
   send(0);
-  lightItUp(PLAYER);
-  lightItUp(SIMDATA);
+  lightItUp(PLAYER, false);
+  lightItUp(SIMDATA, false);
   // Serial.println(pollPower(VOLTAGE_DIVIDER));
 }
