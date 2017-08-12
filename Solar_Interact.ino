@@ -1,4 +1,3 @@
-
 /** Solar Interact - UC San Diego ESW
  * @authors: Jason Liu, Kelly Levick, Jon Bradshaw, Mukund Nair, JJ Kadifa
  * @version 1.0
@@ -8,22 +7,22 @@
 /******************Libraries*************************/
 #include <Arduino.h>
 #include <SoftwareSerial.h>
-#include <Time.h>
-#include <TimeLib.h>
+//#include <Time.h>
+//#include <TimeLib.h>
 
 /******************Constants*************************/
 #define LVL_1PLAY 2
 #define LVL_2PLAY 3
 #define LVL_3PLAY 4
-#define LVL_4PLAY 5
-#define LVL_5PLAY 6
-#define LVL_6PLAY 7
+#define LVL_4PLAY 22
+#define LVL_5PLAY 22
+#define LVL_6PLAY 22
 
-#define LVL_1SIM 27
-#define LVL_2SIM 28
-#define LVL_3SIM 29 
-#define LVL_4SIM 30 
-#define LVL_5SIM 31
+#define LVL_1SIM 8
+#define LVL_2SIM 9
+#define LVL_3SIM 10
+#define LVL_4SIM 22
+#define LVL_5SIM 22
 
 #define MAX_POWER 15 //Originally 20
 #define MAX_ANALOG 20
@@ -35,11 +34,11 @@
 
 #define BTrefreshTime 2000 // (ms)
 
-#define TX 10 //On BT Module //Warning: Some pins can't be used for TX/RX.
-#define RX 11 //On BT Module // See SoftSerial lib for details.
+#define TX 50 //On BT Module //Warning: Some pins can't be used for TX/RX.
+#define RX 51 //On BT Module // See SoftSerial lib for details.
 
 
-//Below are codes for the bluetooth communication
+//Below are bluetooth communication codes
 //TODO: Ensure power measurements do not conflict with below
 #define IDLE 99
 #define MODE_1 1
@@ -48,20 +47,24 @@
 #define ACK_MODE_2 2 //             "
 #define ACK_DATA 3 //Acknowledges data received
 #define STORE_ARRAY 3
-#define DATA_POINTS 10 //# of data points for simulated solar data
-#define POLL_POWER_RATE 500//in millis
-const char *PLAYER = "PLAYER";
-const char *SIMDATA = "SIMDATA";
 #define START 11
 #define END 22
-#define LIGHTING_TIME_STEP 1000 //in millis.
 
-/******************Global Variables*******************/
+const char *PLAYER = "PLAYER";
+const char *SIMDATA = "SIMDATA";
 
+#define POLL_POWER_RATE 500//in millis. Also controls LED update rate
+
+//BT
 String incomingData = ""; // For BT
 SoftwareSerial BTserial(TX, RX); // TX | RX (On BT module)
 
-int simData[DATA_POINTS] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1}; //-1 Represents empty
+//Game
+#define TOTAL_GAME_TIME 60 //seconds // Sync w/ Tablet
+#define SIZE_SIM_DATA 120            //Sync w/ Tablet
+unsigned long SIM_LIGHTING_STEP = 500;
+ // Formula: (TOTAL_GAME_TIME/SIZE_SIM_DATA)*1000; //in millis
+float simData[SIZE_SIM_DATA]; //-1 Represents empty
 int STATUS = 99; //Start Arduino on idle
 boolean GAME_START = false; //Controls when SimData lighting begins
 
@@ -99,20 +102,20 @@ int endGameWin() {
   else return 0;
 }
 
- /** Controls lighting of LEDs
+/** Controls lighting of LEDs
  * @param power
  * @return
  */
- void ledBrightness(float power, int side, bool funPlay) { //TODO: Works in increasing power, but not in decreasing
-     int groundfloor = LVL_1SIM;
+ void ledBrightness(float power, int side) { //TODO: Works in increasing power, but not in decreasing
+     int a = LVL_1SIM;
      if (side == 1) // controls whether the user-controlled or solar-controlled side is lit
-       groundfloor = LVL_1PLAY;
-  //   else groundfloor = LVL_1SIM;
+       a = LVL_1PLAY;
+  //   else a = LVL_1SIM;
      int level = 0; //how many extra levels will be lit
      if (power > MAX_POWER) {
        for (int i = 0; i < 5; i++)
-         analogWrite(groundfloor+i, MAX_ANALOG);
-       return; //TODO: Why 6?
+         analogWrite(a+i, MAX_ANALOG);
+       return 6; //TODO: Why 6?
      }
      power /= (MAX_POWER/5); //scales power to a proportion of the maximum power needed to advance each level of Geisel
      while (power > 1) { //controls how many levels will be lit up
@@ -120,18 +123,19 @@ int endGameWin() {
        power -= 1;
      }
      int brightness = MAX_ANALOG*power; // 200 is basically completely on and 70 is low power, 200-70 is the range of brightness, we will change the numbers into variables
-     for (int i = 0; i < level; i++) {
-       analogWrite(groundfloor+i, MAX_ANALOG);
-     }
-     if (funPlay) {
-        for (int j = level+groundfloor; j < (groundfloor+6); j++) {
-          analogWrite(j, 0);
-        }
-     }
-     analogWrite(groundfloor+level, brightness); //last level will be at proportional brightness
+     if (level > 0) //sets number of levels - 1 at maximum brightness
+     int i = 0;
+       for (int i = 0; i < level; i++) {
+         analogWrite(a+i, MAX_ANALOG);
+       }
+      int j = 0;
+       for (int j = level+a; j < (a+6); j++) {
+        analogWrite(j, 0);
+       }
+     analogWrite(a+level, brightness); //last level will be at proportional brightness
  }
 
-void lightItUp(char *side, bool funPlay){
+void lightItUp(const char *side){
   static unsigned long lastCallPlayer = 0;
   static unsigned long lastCallSimData = 0;
   static int dataPtCounter = 0; //To cycle through SimData
@@ -139,7 +143,7 @@ void lightItUp(char *side, bool funPlay){
   if(strcmp(side,"PLAYER") == 0){ //Chooses which data to use to light up Geisel
 
     if((unsigned long)(millis() - lastCallPlayer) > POLL_POWER_RATE){
-      ledBrightness(pollPower(VOLTAGE_DIVIDER), 1, funPlay);
+      ledBrightness(pollPower(VOLTAGE_DIVIDER), 1);
       Serial.print(pollPower(VOLTAGE_DIVIDER));
       Serial.print("    ");
       Serial.print(millis());
@@ -152,12 +156,12 @@ void lightItUp(char *side, bool funPlay){
 
   }else if(strcmp(side,"SIMDATA") == 0){
     if(GAME_START){ //Won't start lighting until flag GAME_START set to true
-        if((unsigned long)(millis() - lastCallSimData) > LIGHTING_TIME_STEP){
-          ledBrightness(simData[dataPtCounter], 2, funPlay);
+        if((unsigned long)(millis() - lastCallSimData) > SIM_LIGHTING_STEP){
+          ledBrightness(simData[dataPtCounter], 2);
           lastCallSimData = millis();
           ++dataPtCounter;
 
-          if(dataPtCounter == DATA_POINTS){ //Auto-resets after game ends
+          if(dataPtCounter == SIZE_SIM_DATA){ //Auto-resets after game ends
             dataPtCounter = 0;
           }
         }
@@ -184,7 +188,7 @@ void lightItUp(char *side, bool funPlay){
   */
 void storeArray(){
   int counter = 0;
-  while(counter < DATA_POINTS){
+  while(counter < SIZE_SIM_DATA){
     if(BTserial.available()){
         Serial.println("---- storeArray()");
         Serial.println("Receving:");
@@ -200,10 +204,10 @@ void storeArray(){
     }
   }
 
-  for(int a = 0; a < DATA_POINTS; a++){
+  for(int a = 0; a < SIZE_SIM_DATA; a++){
       Serial.print("|");
       Serial.print(simData[a]);
-      if(a == DATA_POINTS-1){
+      if(a == SIZE_SIM_DATA-1){
         Serial.print("|");
       }
   }
@@ -293,25 +297,25 @@ void receiveData(){
  */
 void lightShow(){
 
-  analogWrite(LVL_1PLAY, 150);
+  analogWrite(LVL_1PLAY, MAX_ANALOG);
   delay(100);
-    analogWrite(LVL_2PLAY, 150);
+    analogWrite(LVL_2PLAY, MAX_ANALOG);
     delay(100);
-      analogWrite(LVL_3PLAY, 150);
+      analogWrite(LVL_3PLAY, MAX_ANALOG);
       delay(100);
-        analogWrite(LVL_4PLAY, 150);
+        analogWrite(LVL_4PLAY, MAX_ANALOG);
         delay(100);
-          analogWrite(LVL_5PLAY, 150);
+          analogWrite(LVL_5PLAY, MAX_ANALOG);
           delay(100);
-            analogWrite(LVL_1SIM, 150);
+            analogWrite(LVL_1SIM, MAX_ANALOG);
             delay(100);
-              analogWrite(LVL_2SIM, 150);
+              analogWrite(LVL_2SIM, MAX_ANALOG);
               delay(100);
-                analogWrite(LVL_3SIM, 150);
+                analogWrite(LVL_3SIM, MAX_ANALOG);
                 delay(100);
-                  analogWrite(LVL_4SIM, 150);
+                  analogWrite(LVL_4SIM, MAX_ANALOG);
                   delay(100);
-                    analogWrite(LVL_5SIM, 150);
+                    analogWrite(LVL_5SIM, MAX_ANALOG);
                     delay(100);
 
   analogWrite(LVL_1PLAY, 0);
@@ -337,6 +341,35 @@ void lightShow(){
   Serial.println("lightShow()");
 }
 
+/* Debug use: Fills simData set with random numbers.
+*
+*/
+void initializeSimData(){
+  int maxPowerRead = 20; //Depends on max power read from pollPower()
+  //Create random data set between 0 and MAX_ANALOG
+  // for(int a = 0 ;  a < SIZE_SIM_DATA ; a++){
+  // 	simData[a] = random(0,MAX_ANALOG);
+  // }
+  //Creates data set increasing then decreasing
+  for(int a = 0 ;  a < SIZE_SIM_DATA ; a++){
+    simData[a] = a*0.166;
+    // if(a >= (int)(SIZE_SIM_DATA/2)){
+    //   simData[a] = SIZE_SIM_DATA - a;
+    // }
+  }
+
+  Serial.print("simData:");
+  for(int a = 0; a < SIZE_SIM_DATA ; a++){
+    Serial.print(" ");
+    Serial.print(simData[a]);
+    if(a == (SIZE_SIM_DATA -1)){
+      Serial.println(".");
+    }
+  }
+
+
+
+}
 /***************Main setup and loop******************/
 
 /** Performs any initializations normally done in setup(). Include pinMode() here
@@ -352,6 +385,9 @@ void performStartupSequence(){
   BTserial.listen();
 
   BTserial.print("BT GO.."); BTserial.println(millis());
+
+  initializeSimData();
+  Serial.println(SIM_LIGHTING_STEP);
 }
 
 void setup(){
@@ -362,7 +398,7 @@ void setup(){
 void loop(){
   receiveData();
   send(0);
-  lightItUp(PLAYER, false);
-  lightItUp(SIMDATA, false);
+  lightItUp(PLAYER);
+  lightItUp(SIMDATA);
   // Serial.println(pollPower(VOLTAGE_DIVIDER));
 }
