@@ -123,7 +123,6 @@ int endGameWin() {
      if (level > 0) //sets number of levels - 1 at maximum brightness
        for (int i = 0; i < level; i++) {
          analogWrite(groundfloor+i, MAX_ANALOG);
-         Serial.println("Hi");
        }
        for (int j = level+groundfloor; j < (groundfloor+6); j++) {
         analogWrite(j, 0);
