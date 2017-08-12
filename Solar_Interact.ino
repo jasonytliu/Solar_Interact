@@ -26,7 +26,7 @@
 #define LVL_5SIM 31
 
 #define MAX_POWER 15 //Originally 20
-#define MAX_ANALOG 500
+#define MAX_ANALOG 20
 
 #define V_RES 1024.0 //resolution of analogRead function
 #define V_MAX_READ 5.0 //max voltage Arduino can read with analogRead
