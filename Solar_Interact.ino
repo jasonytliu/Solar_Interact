@@ -119,10 +119,17 @@ int endGameWin() {
        level++;
        power -= 1;
      }
-     int brightness = 70+(200-70)*power; // 200 is basically completely on and 70 is low power, 200-70 is the range of brightness, we will change the numbers into variables
+     int brightness = MAX_ANALOG*power; // 200 is basically completely on and 70 is low power, 200-70 is the range of brightness, we will change the numbers into variables
      if (level > 0) //sets number of levels - 1 at maximum brightness
-       for (int i = 0; i < level; i++)
+     int i = 0;
+       for (int i = 0; i < level; i++) {
          analogWrite(a+i, MAX_ANALOG);
+         Serial.println("Hi");
+       }
+      int j = 0;
+       for (int j = level+a; j < (a+6); j++) {
+        analogWrite(j, 0);
+       }
      analogWrite(a+level, brightness); //last level will be at proportional brightness
  }
 
