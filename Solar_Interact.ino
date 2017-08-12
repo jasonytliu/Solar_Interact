@@ -8,8 +8,8 @@
 /******************Libraries*************************/
 #include <Arduino.h>
 #include <SoftwareSerial.h>
-//#include <Time.h>
-//#include <TimeLib.h>
+#include <Time.h>
+#include <TimeLib.h>
 
 /******************Constants*************************/
 #define LVL_1PLAY 2
