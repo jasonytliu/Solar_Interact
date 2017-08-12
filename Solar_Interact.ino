@@ -103,7 +103,7 @@ int endGameWin() {
  * @param power
  * @return
  */
- void ledBrightness(float power, int side) { //TODO: Works in increasing power, but not in decreasing
+ void ledBrightness(float power, int side, bool funPlay) { //TODO: Works in increasing power, but not in decreasing
      int groundfloor = LVL_1SIM;
      if (side == 1) // controls whether the user-controlled or solar-controlled side is lit
        groundfloor = LVL_1PLAY;
@@ -120,17 +120,18 @@ int endGameWin() {
        power -= 1;
      }
      int brightness = MAX_ANALOG*power; // 200 is basically completely on and 70 is low power, 200-70 is the range of brightness, we will change the numbers into variables
-     if (level > 0) //sets number of levels - 1 at maximum brightness
-       for (int i = 0; i < level; i++) {
-         analogWrite(groundfloor+i, MAX_ANALOG);
-       }
-       for (int j = level+groundfloor; j < (groundfloor+6); j++) {
-        analogWrite(j, 0);
-       }
+     for (int i = 0; i < level; i++) {
+       analogWrite(groundfloor+i, MAX_ANALOG);
+     }
+     if (funPlay) {
+        for (int j = level+groundfloor; j < (groundfloor+6); j++) {
+          analogWrite(j, 0);
+        }
+     }
      analogWrite(groundfloor+level, brightness); //last level will be at proportional brightness
  }
 
-void lightItUp(char *side){
+void lightItUp(char *side, bool funPlay){
   static unsigned long lastCallPlayer = 0;
   static unsigned long lastCallSimData = 0;
   static int dataPtCounter = 0; //To cycle through SimData
@@ -138,7 +139,7 @@ void lightItUp(char *side){
   if(strcmp(side,"PLAYER") == 0){ //Chooses which data to use to light up Geisel
 
     if((unsigned long)(millis() - lastCallPlayer) > POLL_POWER_RATE){
-      ledBrightness(pollPower(VOLTAGE_DIVIDER), 1);
+      ledBrightness(pollPower(VOLTAGE_DIVIDER), 1, funPlay);
       Serial.print(pollPower(VOLTAGE_DIVIDER));
       Serial.print("    ");
       Serial.print(millis());
@@ -152,7 +153,7 @@ void lightItUp(char *side){
   }else if(strcmp(side,"SIMDATA") == 0){
     if(GAME_START){ //Won't start lighting until flag GAME_START set to true
         if((unsigned long)(millis() - lastCallSimData) > LIGHTING_TIME_STEP){
-          ledBrightness(simData[dataPtCounter], 2);
+          ledBrightness(simData[dataPtCounter], 2, funPlay);
           lastCallSimData = millis();
           ++dataPtCounter;
 
