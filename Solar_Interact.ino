@@ -82,7 +82,9 @@ void gameMode() {
       Serial.println(receivedData);
       lightGeisel(receivedData, SIM);
     }
-    lightGeisel(pollPower(), GEN);
+    int userPower = pollPower();
+    lightGeisel(userPower, GEN);
+    send(userPower); 
     delay(100);
   }
 }
