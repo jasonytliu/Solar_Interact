@@ -1,6 +1,12 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 
+//New
+#include <Encoder.h>
+
+Encoder knobLeft(2,3);
+//New ^
+
 #define TX 50
 #define RX 51
 
@@ -52,10 +58,39 @@ void gameMode() {
   }
 }
 
-void setup() {
-  Serial.begin(115200);
-  Serial.println("System running.");
+//New
+void readEncoder(){
+  static long encoderPosition  = -999;
 
+  static unsigned long dt = 0;
+  static unsigned long lastTimeStamp = 0;
+  static unsigned int rotSpeed = 0;
+
+  long newPosition;
+  newPosition = knobLeft.read();
+
+  dt = (unsigned long)(millis() - lastTimeStamp);
+  lastTimeStamp = millis(); 
+  rotSpeed = abs(newPosition - encoderPosition)/dt; 
+  rotSpeed = rotSpeed == 65535 ? 0 : rotSpeed; //Remove outliers 
+  
+  if (newPosition != encoderPosition) {
+    Serial.print("Left = ");
+    Serial.print(newPosition);
+    Serial.print(", Speed = ");
+    Serial.print(rotSpeed);
+    Serial.println();
+    
+    encoderPosition = newPosition;
+  }
+}
+
+//New ^
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("System running.");
+ 
   BTserial.begin(9600);
   pinMode(TX, INPUT_PULLUP); // only needed for JY-MCUY v1.06x
   BTserial.listen();
@@ -66,11 +101,13 @@ void setup() {
 //  Serial.println(SIM_LIGHTING_STEP);
 }
 
+
 void loop() {
     receiveData();
     if (receivedData == START) {
         Serial.println("Game start");
         gameMode(); 
     }
-    delay(100);
+//    delay(100);
+  readEncoder();
 }
