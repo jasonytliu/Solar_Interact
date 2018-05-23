@@ -7,8 +7,8 @@
 Encoder knobLeft(2,3);
 //New ^
 
-#define TX 50
-#define RX 51
+#define TX 52
+#define RX 53
 
 #define START   100
 #define ENDGAME 10000
