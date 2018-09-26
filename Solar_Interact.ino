@@ -232,11 +232,12 @@ void loop() {
     receiveData();
     if (receivedData == START_EASY || receivedData == START_MEDIUM || receivedData == START_HARD) {
         Serial.println("Game start");
-        gameMode(); 
+        gameMode();
+        delay(1000);
+        resetLights();
     }
   delay(3000);
-
-  //resetLights();
+  
 
 //readEncoder();
 }
